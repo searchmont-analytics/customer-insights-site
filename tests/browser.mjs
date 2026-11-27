@@ -13,8 +13,15 @@ try{
   const portrait=page.locator('.portrait-image img');
   await portrait.waitFor({state:'visible'});
   await portrait.evaluate(img=>img.decode());
-  assert.deepEqual(await portrait.evaluate(img=>[img.naturalWidth,img.naturalHeight]),[400,500],'Portrait decoded correctly');
+  assert.deepEqual(await portrait.evaluate(img=>[img.naturalWidth,img.naturalHeight]),[560,700],'Full-length portrait decoded correctly');
+  assert.equal(await portrait.evaluate(img=>getComputedStyle(img).objectFit),'contain','Full portrait is not cropped');
   assert.equal(await page.locator('.philosophy-principles article').count(),3);
+  assert.equal(await page.locator('#impact .press-card').count(),2);
+  assert.equal(await page.locator('.impact-grid article').count(),4);
+  await page.locator('nav a[href="#impact"]').click();
+  assert.ok(page.url().endsWith('#impact'));
+  assert.ok(await page.locator('#impact-skatepark').isVisible());
+  await page.goto(url);
   assert.equal(await page.locator('.case-card').count(),6);
   const leadershipImages=page.locator('.leadership-image img');
   assert.equal(await leadershipImages.count(),3);

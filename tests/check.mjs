@@ -31,12 +31,12 @@ for(const [name,bytes,checksum] of leadershipImages){
 assert.equal((home.match(/class="leadership-figure"/g)||[]).length,3);
 assert.equal((home.match(/AI-generated illustration/g)||[]).length,2);
 assert.ok(home.includes('not documentary evidence of a particular meeting'));
-assert.match(home,/<img src="assets\/travis-portrait.avif" width="400" height="500" alt="[^"]+"/);
-const portrait=readFileSync(new URL('../public/assets/travis-portrait.avif',import.meta.url));
-assert.equal(portrait.length,4400,'Portrait file byte length');
+assert.match(home,/<img src="assets\/travis-full-portrait.avif" width="560" height="700" alt="[^"]+"/);
+const portrait=readFileSync(new URL('../public/assets/travis-full-portrait.avif',import.meta.url));
+assert.equal(portrait.length,6120,'Portrait file byte length');
 assert.equal(portrait.toString('ascii',4,12),'ftypavif','AVIF file signature');
-assert.equal(portrait.reduce((v,b)=>Math.imul(v^b,16777619)>>>0,2166136261),0x044e9420,'Original crop transfer checksum');
-for(const id of ['philosophy','leadership','experience','strategy','work','research-note','alignment','roadmap'])assert.ok(home.includes('id="'+id+'"'));
+assert.equal(portrait.reduce((v,b)=>Math.imul(v^b,16777619)>>>0,2166136261),0xa2e3b228,'Full-length source derivative checksum');
+for(const id of ['philosophy','leadership','impact','impact-skatepark','experience','strategy','work','research-note','alignment','roadmap'])assert.ok(home.includes('id="'+id+'"'));
 for(let i=1;i<=6;i++)assert.ok(home.includes('https://searchmont-analytics.github.io/customer-intelligence-lab/#module-'+i));
 assert.ok(home.includes('#executive-1')&&home.includes('#technical'));
 assert.ok(home.includes('2007–2009</time><div><h3>Voice Network Analyst')&&home.includes('2009–2011*</time>'));
@@ -47,3 +47,9 @@ assert.ok(home.includes('$400,000 raised')&&home.includes('14 sections')&&home.i
 assert.ok(home.includes('class="research-method-note"'),'Research appraisal methods disclosure');
 assert.match(home,/not an OLG customer sample/i);
 console.log('PASS: local anchors, page headings, all six lab links, two entry pathways, timeline, alignment and source safeguards.');
+
+assert.equal((home.match(/class="press-card"/g)||[]).length,2,'Independent press links');
+assert.ok(home.includes('https://www.sootoday.com/local-news/the-problem-with-our-new-skate-park-25-photos-124248')&&home.includes('https://www.sootoday.com/local-news/the-skate-park-isnt-big-enough-for-the-community-that-we-have-11-photos-322287'),'Both supplied articles linked');
+assert.ok(home.includes('$75,000')&&home.includes('do not verify the full funding total'),'Grant and funding provenance');
+assert.ok(home.includes('id="impact-title"')&&home.includes('id="impact-skatepark"'),'Career impact case');
+assert.match(load('styles.css'),/\.portrait-image img\{object-fit:contain/);
