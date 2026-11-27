@@ -20,21 +20,23 @@ for (const file of ['index.html','briefing.html','evidence.html']) {
  assert.ok(!/<script\b|<iframe\b/.test(html),'No external or inline scripts or embeds');
 }
 const home=load('index.html');
-const leadershipImages=['assets/fire-service-training.avif','assets/fire-service-fleet.avif','assets/lead-board.avif'];
-for(const path of leadershipImages){
- const img=readFileSync(new URL('../public/'+path,import.meta.url));
- assert.equal(img.toString('ascii',4,12),'ftypavif');
- assert.ok(home.includes('src="'+path+'"'),'Leadership image referenced');
+const manifest=JSON.parse(readFileSync(new URL('./photo-manifest.json',import.meta.url),'utf8'));
+for(const p of manifest.photos){
+ const bytes=readFileSync(new URL('../public/'+p.path,import.meta.url));
+ const sha=createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+ const version=p.versions.find(v=>v.sha===sha&&v.size===bytes.length);
+ assert.ok(version,'Verified photo asset: '+p.path);
+ assert.ok(home.includes('src="'+p.path+'"'),'Photo referenced: '+p.path);
+ if(p.path.endsWith('.webp'))assert.equal(bytes.toString('ascii',8,12),'WEBP');
+ else assert.equal(bytes.toString('ascii',4,12),'ftypavif');
+ if(version.quality==='legacy')console.warn('PENDING high-resolution replacement: '+p.path);
+ else {assert.ok(Math.max(version.width,version.height)>=1200);console.log('HQ: '+p.path+' '+version.width+'x'+version.height);}
 }
 assert.equal((home.match(/class="leadership-figure"/g)||[]).length,3);
 assert.equal((home.match(/AI-generated illustration/g)||[]).length,1);
 assert.equal((home.match(/Fire-service photograph · Author supplied/g)||[]).length,2);
 assert.ok(home.includes('not documentary evidence'));
-assert.match(home,/<img src="assets\/travis-full-portrait.avif" width="560" height="700" alt="[^"]+"/);
-const portrait=readFileSync(new URL('../public/assets/travis-full-portrait.avif',import.meta.url));
-assert.equal(portrait.length,6120,'Portrait file byte length');
-assert.equal(portrait.toString('ascii',4,12),'ftypavif','AVIF file signature');
-assert.equal(portrait.reduce((v,b)=>Math.imul(v^b,16777619)>>>0,2166136261),0xa2e3b228,'Full-length source derivative checksum');
+assert.ok(home.includes('src="assets/travis-full-portrait-hq.webp" width="1122" height="1402"'));
 for(const id of ['philosophy','leadership','impact','impact-skatepark','experience','strategy','work','research-note','alignment','roadmap'])assert.ok(home.includes('id="'+id+'"'));
 for(let i=1;i<=6;i++)assert.ok(home.includes('https://searchmont-analytics.github.io/customer-intelligence-lab/#module-'+i));
 assert.ok(home.includes('#executive-1')&&home.includes('#technical'));
@@ -63,7 +65,7 @@ for(const content of [home,evidence,load('briefing.html')]){
 }
 console.log('PASS: evidence library routes, source categories and privacy safeguards.');
 
-const visualAssets=[["assets/fire-service-training.avif","c21e8ff7b5cccb9192a4339092bda20f4d4546a7",4403],["assets/fire-service-fleet.avif","25c8680df6cbe5acbf968006d2dbfea0cf7f876c",3740],["assets/governance-framework.jpg","a2ae2887773a2e5bf7e7053405fb756ee2e6771e",192214],["assets/lesson-coverage-map.png","9bfe0c2b531d58673b4bf6603b27ffdb77808d96",95221],["assets/firesmart-demo.png","e54c8c45bb29b52066bdee140e48a27cbe10deec",420682]];
+const visualAssets=[["assets/governance-framework.jpg","a2ae2887773a2e5bf7e7053405fb756ee2e6771e",192214],["assets/lesson-coverage-map.png","9bfe0c2b531d58673b4bf6603b27ffdb77808d96",95221],["assets/firesmart-demo.png","e54c8c45bb29b52066bdee140e48a27cbe10deec",420682]];
 for(const [path,sha,size] of visualAssets){
  const bytes=readFileSync(new URL('../public/'+path,import.meta.url));
  assert.equal(bytes.length,size,'Asset byte count: '+path);

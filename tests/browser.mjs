@@ -1,7 +1,18 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 const url=new URL('../public/index.html',import.meta.url).href;
+const manifest=JSON.parse(readFileSync(new URL('./photo-manifest.json',import.meta.url),'utf8'));
+const photoDimensions=new Map(manifest.photos.map(p=>{
+ const bytes=readFileSync(new URL('../public/'+p.path,import.meta.url));
+ const sha=createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+ const v=p.versions.find(x=>x.sha===sha&&x.size===bytes.length);
+ assert.ok(v,'Known photo version: '+p.path);
+ return [p.path,v];
+}));
+
 await mkdir(new URL('./output/',import.meta.url),{recursive:true});
 const browser=await chromium.launch({headless:true});
 try{
@@ -13,7 +24,7 @@ try{
   const portrait=page.locator('.portrait-image img');
   await portrait.waitFor({state:'visible'});
   await portrait.evaluate(img=>img.decode());
-  assert.deepEqual(await portrait.evaluate(img=>[img.naturalWidth,img.naturalHeight]),[560,700],'Full-length portrait decoded correctly');
+  assert.deepEqual(await portrait.evaluate(img=>[img.naturalWidth,img.naturalHeight]),[1122,1402],'High-resolution full-length portrait decoded correctly');
   assert.equal(await portrait.evaluate(img=>getComputedStyle(img).objectFit),'contain','Full portrait is not cropped');
   assert.equal(await page.locator('.philosophy-principles article').count(),3);
   assert.equal(await page.locator('#impact .press-card').count(),2);
@@ -53,12 +64,13 @@ try{
   assert.equal(await page.locator('.case-card').count(),6);
   const leadershipImages=page.locator('.leadership-image img');
   assert.equal(await leadershipImages.count(),3);
-  const expected=[[420,280],[400,300],[340,255]];
+  const expected=['assets/fire-service-training.avif','assets/fire-service-fleet.avif','assets/lead-board-hq.webp'].map(path=>photoDimensions.get(path));
   for(let k=0;k<3;k++){
    const img=leadershipImages.nth(k);
    await img.scrollIntoViewIfNeeded();
    await img.evaluate(el=>el.decode());
-   assert.deepEqual(await img.evaluate(el=>[el.naturalWidth,el.naturalHeight]),expected[k],'Leadership image decoded');
+   assert.deepEqual(await img.evaluate(el=>[el.naturalWidth,el.naturalHeight]),[expected[k].width,expected[k].height],'Leadership image decoded at verified source dimensions');
+   if(expected[k].quality==='high')assert.ok(Math.max(expected[k].width,expected[k].height)>=1200,'High-quality source');
   }
   await page.locator('h1').scrollIntoViewIfNeeded();
   assert.equal(await page.locator('.fit-item').count(),6);

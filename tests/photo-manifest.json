@@ -1,0 +1,66 @@
+{
+  "photos": [
+    {
+      "path": "assets/travis-full-portrait-hq.webp",
+      "versions": [
+        {
+          "sha": "bf7e3eb40c4cd5065b56cf11252f2425b851f1ad",
+          "size": 92334,
+          "width": 1122,
+          "height": 1402,
+          "quality": "high"
+        }
+      ]
+    },
+    {
+      "path": "assets/lead-board-hq.webp",
+      "versions": [
+        {
+          "sha": "110b7c23bf8c8d02bfefbb250e34a0c81ece4f71",
+          "size": 222842,
+          "width": 1447,
+          "height": 1087,
+          "quality": "high"
+        }
+      ]
+    },
+    {
+      "path": "assets/fire-service-training.avif",
+      "versions": [
+        {
+          "sha": "8789f351083bb4b701e0c5ba73fa8389cbf98052",
+          "size": 215891,
+          "width": 1417,
+          "height": 945,
+          "quality": "high"
+        },
+        {
+          "sha": "c21e8ff7b5cccb9192a4339092bda20f4d4546a7",
+          "size": 4403,
+          "width": 420,
+          "height": 280,
+          "quality": "legacy"
+        }
+      ]
+    },
+    {
+      "path": "assets/fire-service-fleet.avif",
+      "versions": [
+        {
+          "sha": "887d082c35b0c5e62d0fc2f9e0f05dafce29ce78",
+          "size": 367116,
+          "width": 1260,
+          "height": 945,
+          "quality": "high"
+        },
+        {
+          "sha": "25c8680df6cbe5acbf968006d2dbfea0cf7f876c",
+          "size": 3740,
+          "width": 400,
+          "height": 300,
+          "quality": "legacy"
+        }
+      ]
+    }
+  ]
+}

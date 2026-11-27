@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['public/**', '.github/workflows/publish-pages.yml', 'tests/check.mjs']
+    paths: ['public/**', '.github/workflows/publish-pages.yml', 'tests/check.mjs', 'tests/photo-manifest.json', 'scripts/version-assets.mjs']
 permissions:
   contents: read
 concurrency:
@@ -24,6 +24,8 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/check.mjs
+      - name: Version published image URLs
+        run: node scripts/version-assets.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
