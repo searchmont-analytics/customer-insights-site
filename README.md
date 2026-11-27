@@ -36,3 +36,13 @@ npx playwright install chromium
 node tests/browser.mjs
 ```
 Automated checks do not replace manual visual, factual and assistive-technology review.
+
+## Alternative: GitHub Pages with the custom domain
+Use **one** production host for the apex custom domain. GitHub's branch-based Pages workflow can build the repository root successfully while placing the actual site under `/public/` instead of at the homepage. The deployment log from the initial branch-based build confirms this layout. To publish only the intended site, without duplicating HTML or exposing repository support files:
+
+1. In repository **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.
+2. In **Actions → Publish portfolio to GitHub Pages**, select **Run workflow** on main. This workflow uploads only `public/`, making `public/index.html` the site homepage.
+3. For automatic publishing on future changes, set repository **Settings → Secrets and variables → Actions → Variables** to create `PUBLISH_WITH_GITHUB_PAGES=true`. Without that opt-in, the workflow only deploys when dispatched manually.
+4. Confirm the site at the Pages URL and then configure the custom domain in repository Pages settings and the corresponding DNS in Cloudflare, using the official guidance. If Cloudflare Pages already serves the apex domain, do not point it at a second host.
+
+Official documentation: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site and https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site. No account settings or DNS changes were made by this commit. The manual publish workflow is prepared but has not been run.
