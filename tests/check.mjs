@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const load=p=>readFileSync(new URL('../public/'+p,import.meta.url),'utf8');
@@ -19,18 +20,16 @@ for (const file of ['index.html','briefing.html','evidence.html']) {
  assert.ok(!/<script\b|<iframe\b/.test(html),'No external or inline scripts or embeds');
 }
 const home=load('index.html');
-const leadershipImages=[['board',3756,0x81ac9887],['community',4560,0x4631ef5f],['chief',4164,0xa50fd74d]];
-for(const [name,bytes,checksum] of leadershipImages){
- const path='assets/lead-'+name+'.avif';
+const leadershipImages=['assets/fire-service-training.avif','assets/fire-service-fleet.avif','assets/lead-board.avif'];
+for(const path of leadershipImages){
  const img=readFileSync(new URL('../public/'+path,import.meta.url));
- assert.equal(img.length,bytes,'Image byte length: '+name);
  assert.equal(img.toString('ascii',4,12),'ftypavif');
- assert.equal(img.reduce((v,b)=>Math.imul(v^b,16777619)>>>0,2166136261),checksum,'Image transfer checksum: '+name);
  assert.ok(home.includes('src="'+path+'"'),'Leadership image referenced');
 }
 assert.equal((home.match(/class="leadership-figure"/g)||[]).length,3);
-assert.equal((home.match(/AI-generated illustration/g)||[]).length,2);
-assert.ok(home.includes('not documentary evidence of a particular meeting'));
+assert.equal((home.match(/AI-generated illustration/g)||[]).length,1);
+assert.equal((home.match(/Fire-service photograph · Author supplied/g)||[]).length,2);
+assert.ok(home.includes('not documentary evidence'));
 assert.match(home,/<img src="assets\/travis-full-portrait.avif" width="560" height="700" alt="[^"]+"/);
 const portrait=readFileSync(new URL('../public/assets/travis-full-portrait.avif',import.meta.url));
 assert.equal(portrait.length,6120,'Portrait file byte length');
@@ -52,7 +51,7 @@ assert.equal((home.match(/class="press-card"/g)||[]).length,2,'Independent press
 assert.ok(home.includes('https://www.sootoday.com/local-news/the-problem-with-our-new-skate-park-25-photos-124248')&&home.includes('https://www.sootoday.com/local-news/the-skate-park-isnt-big-enough-for-the-community-that-we-have-11-photos-322287'),'Both supplied articles linked');
 assert.ok(home.includes('$75,000')&&home.includes('do not verify the full funding total'),'Grant and funding provenance');
 assert.ok(home.includes('id="impact-title"')&&home.includes('id="impact-skatepark"'),'Career impact case');
-assert.match(load('styles.css'),/\.portrait-image img\{object-fit:contain/);
+assert.match(load('styles-v07.css'),/\.portrait-image img\{object-fit:contain/);
 
 const evidence=load('evidence.html');
 assert.ok(home.includes('href="evidence.html#recognition"')&&home.includes('href="evidence.html"'),'Evidence library entry points');
@@ -63,3 +62,16 @@ for(const content of [home,evidence,load('briefing.html')]){
  assert.ok(!/mailto:|\.pdf["']|[A-Za-z0-9._%+-]+@(?:opp\.ca|ontario\.ca|gmail\.com)/i.test(content),'No private correspondence attachment or email address');
 }
 console.log('PASS: evidence library routes, source categories and privacy safeguards.');
+
+const visualAssets=[["assets/fire-service-training.avif","c21e8ff7b5cccb9192a4339092bda20f4d4546a7",4403],["assets/fire-service-fleet.avif","25c8680df6cbe5acbf968006d2dbfea0cf7f876c",3740],["assets/governance-framework.jpg","a2ae2887773a2e5bf7e7053405fb756ee2e6771e",192214],["assets/lesson-coverage-map.png","9bfe0c2b531d58673b4bf6603b27ffdb77808d96",95221],["assets/firesmart-demo.png","e54c8c45bb29b52066bdee140e48a27cbe10deec",420682]];
+for(const [path,sha,size] of visualAssets){
+ const bytes=readFileSync(new URL('../public/'+path,import.meta.url));
+ assert.equal(bytes.length,size,'Asset byte count: '+path);
+ assert.equal(createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex'),sha,'Asset integrity: '+path);
+ assert.ok(home.includes('src="'+path+'"'),'Image included: '+path);
+}
+for(const p of ['index.html','evidence.html','briefing.html'])assert.ok(load(p).includes('href="styles-v07.css"'),'Versioned stylesheet '+p);
+assert.equal((home.match(/class="impact-achievement"/g)||[]).length,4);
+assert.equal((home.match(/class="impact-project-image"/g)||[]).length,3);
+assert.ok(load('styles-v07.css').includes('#impact .impact-grid{display:grid'));
+console.log('PASS: versioned stylesheet, provenance, image integrity and career impact card structure.');

@@ -21,11 +21,39 @@ try{
   await page.locator('nav a[href="#impact"]').click();
   assert.ok(page.url().endsWith('#impact'));
   assert.ok(await page.locator('#impact-skatepark').isVisible());
+  const layout=await page.evaluate(()=>{
+    const d=s=>getComputedStyle(document.querySelector(s));
+    const rect=s=>Array.from(document.querySelectorAll(s),n=>({x:n.getBoundingClientRect().x,y:n.getBoundingClientRect().y}));
+    return {stylesheet:[...document.styleSheets].some(s=>s.href&&s.href.endsWith('/styles-v07.css')),head:d('#impact .impact-feature-head').display,background:d('#impact .impact-feature-head').backgroundImage,foreground:d('#impact .impact-feature-head').color,journey:d('#impact .impact-journey').display,press:d('#impact .press-grid').display,pressCard:d('#impact .press-card').display,recognition:d('#impact .impact-recognition').display,cards:d('#impact .impact-grid').display,card:d('#impact .impact-achievement').display,columns:rect('#impact .impact-achievement'),milestones:rect('#impact .impact-journey article'),bodyPadding:parseFloat(d('#impact .impact-feature-body').paddingTop),metric:d('#impact .impact-feature-metric strong').display};
+  });
+  assert.ok(layout.stylesheet,'Versioned stylesheet loaded');
+  for(const name of ['head','journey','press','recognition','cards'])assert.equal(layout[name],'grid','Computed layout: '+name);
+  assert.equal(layout.pressCard,'flex');
+  assert.equal(layout.card,'flex');
+  assert.equal(layout.metric,'block');
+  assert.ok(layout.background.includes('gradient')&&layout.foreground==='rgb(255, 255, 255)','Dark feature header actually rendered');
+  assert.ok(layout.bodyPadding>=18,'Feature body padding applied');
+  if(width<=760){
+   assert.ok(layout.columns.every(p=>Math.abs(p.x-layout.columns[0].x)<2),'Mobile cards stack');
+   assert.ok(layout.milestones.every(p=>Math.abs(p.x-layout.milestones[0].x)<2),'Mobile milestones stack');
+  }else{
+   assert.ok(Math.abs(layout.columns[0].x-layout.columns[1].x)>30,'Desktop cards side by side');
+   assert.ok(Math.abs(layout.columns[0].y-layout.columns[1].y)<2,'Desktop first row aligned');
+   assert.ok(Math.abs(layout.milestones[0].y-layout.milestones[2].y)<2,'Desktop milestones aligned');
+  }
+  const visuals=page.locator('#impact .impact-project-image img');
+  assert.equal(await visuals.count(),3);
+  for(let i=0;i<3;i++){
+   const visual=visuals.nth(i);await visual.scrollIntoViewIfNeeded();await visual.evaluate(el=>el.decode());
+   assert.ok(await visual.evaluate(el=>el.naturalWidth>0&&el.naturalHeight>0),'Project image decoded');
+  }
+  await page.locator('#impact').scrollIntoViewIfNeeded();
+  await page.screenshot({path:new URL('./output/impact-'+width+'.png',import.meta.url).pathname});
   await page.goto(url);
   assert.equal(await page.locator('.case-card').count(),6);
   const leadershipImages=page.locator('.leadership-image img');
   assert.equal(await leadershipImages.count(),3);
-  const expected=[[340,255],[302,340],[255,340]];
+  const expected=[[420,280],[400,300],[340,255]];
   for(let k=0;k<3;k++){
    const img=leadershipImages.nth(k);
    await img.scrollIntoViewIfNeeded();
@@ -60,6 +88,7 @@ try{
   assert.ok(page.url().endsWith('/evidence.html'));
   assert.equal(await page.locator('h1').count(),1);
   assert.equal(await page.locator('.recognition-feature').count(),1);
+  assert.equal(await page.locator('.recognition-grid').evaluate(el=>getComputedStyle(el).display),'grid','Evidence recognition CSS loaded');
   assert.equal(await page.locator('#press .press-card').count(),2);
   assert.equal(await page.locator('.library-card-grid article').count(),6);
   const ev=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,inner:innerWidth}));
