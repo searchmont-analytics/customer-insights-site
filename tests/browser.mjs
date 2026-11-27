@@ -50,6 +50,19 @@ try{
   assert.equal(await getTheme(),other,'Theme persists after reload');
   await toggle.click();assert.equal(await getTheme(),theme,'Return to scenario theme');
   assert.equal(await toggle.getAttribute('aria-label'),theme==='dark'?'Switch to light mode':'Switch to dark mode');
+  assert.equal((await toggle.textContent()).trim(),'','Icon-only theme control');
+  assert.equal(await toggle.getAttribute('title'),theme==='dark'?'Switch to light mode':'Switch to dark mode');
+  assert.equal(await toggle.locator(theme==='dark'?'.sun':'.moon').isVisible(),true,'Correct theme icon');
+  assert.equal(await toggle.locator(theme==='dark'?'.moon':'.sun').isVisible(),false,'Only one icon visible');
+  const toggleBounds=await toggle.boundingBox();
+  assert.ok(toggleBounds&&toggleBounds.width>=44&&toggleBounds.width<=45&&toggleBounds.height>=44,'Compact accessible theme target');
+  const executive=page.locator('.head-actions .mast-brief');
+  assert.ok(await executive.isVisible(),'Executive Brief visible at every screen width');
+  const briefStyle=await executive.evaluate(el=>({bg:getComputedStyle(el).backgroundColor,fg:getComputedStyle(el).color}));
+  assert.equal(briefStyle.bg,theme==='dark'?'rgb(169, 226, 212)':'rgb(7, 107, 101)','Prominent filled briefing button');
+  assert.equal(await page.locator('#impact-skatepark .impact-evidence-note').count(),0);
+  assert.ok((await page.locator('#impact-skatepark .impact-lead').innerText()).startsWith('As President of the Superior Community Skatepark Association'));
+
   const card=page.locator('.hero-portrait');
   assert.equal(await card.evaluate(el=>getComputedStyle(el).borderTopLeftRadius),'22px','Approved rounded corners');
   assert.equal(await card.evaluate(el=>getComputedStyle(el).overflow),'hidden','Rounded clipping');
@@ -72,7 +85,7 @@ try{
   const layout=await page.evaluate(()=>{
     const d=s=>getComputedStyle(document.querySelector(s));
     const rect=s=>Array.from(document.querySelectorAll(s),n=>({x:n.getBoundingClientRect().x,y:n.getBoundingClientRect().y}));
-    return {stylesheet:[...document.styleSheets].some(s=>s.href&&s.href.endsWith('/styles-v09.css')),head:d('#impact .impact-feature-head').display,background:d('#impact .impact-feature-head').backgroundImage,foreground:d('#impact .impact-feature-head').color,journey:d('#impact .impact-journey').display,press:d('#impact .press-grid').display,pressCard:d('#impact .press-card').display,recognition:d('#impact .impact-recognition').display,cards:d('#impact .impact-grid').display,card:d('#impact .impact-achievement').display,columns:rect('#impact .impact-achievement'),milestones:rect('#impact .impact-journey article'),bodyPadding:parseFloat(d('#impact .impact-feature-body').paddingTop),metric:d('#impact .impact-feature-metric strong').display};
+    return {stylesheet:[...document.styleSheets].some(s=>s.href&&s.href.endsWith('/styles-v10.css')),head:d('#impact .impact-feature-head').display,background:d('#impact .impact-feature-head').backgroundImage,foreground:d('#impact .impact-feature-head').color,journey:d('#impact .impact-journey').display,press:d('#impact .press-grid').display,pressCard:d('#impact .press-card').display,recognition:d('#impact .impact-recognition').display,cards:d('#impact .impact-grid').display,card:d('#impact .impact-achievement').display,columns:rect('#impact .impact-achievement'),milestones:rect('#impact .impact-journey article'),bodyPadding:parseFloat(d('#impact .impact-feature-body').paddingTop),metric:d('#impact .impact-feature-metric strong').display};
   });
   assert.ok(layout.stylesheet,'Versioned stylesheet loaded');
   for(const name of ['head','journey','press','recognition','cards'])assert.equal(layout[name],'grid','Computed layout: '+name);
@@ -148,6 +161,8 @@ try{
   assert.equal(await page.locator('.recognition-feature').count(),1);
   await page.locator('#themeToggle').waitFor({state:'visible'});
   assert.equal(await getTheme(),theme,'Preference on evidence library');
+  assert.ok(await page.locator('.head-actions .mast-brief').isVisible(),'Executive Brief visible on evidence page');
+  assert.equal((await page.locator('#themeToggle').textContent()).trim(),'','Icon-only theme control on evidence page');
   assert.equal(await page.locator('.recognition-feature').evaluate(el=>getComputedStyle(el).backgroundColor),theme==='dark'?'rgb(20, 37, 49)':'rgb(255, 255, 255)','Evidence library theme');
   assert.equal(await page.locator('.recognition-grid').evaluate(el=>getComputedStyle(el).display),'grid','Evidence recognition CSS loaded');
   assert.equal(await page.locator('#press .press-card').count(),2);

@@ -18,9 +18,9 @@ for (const file of ['index.html','briefing.html','evidence.html']) {
   }
  }
  assert.equal((html.match(/<script\b[^>]*>[\s\S]*?<\/script>/g)||[]).length,1,'One shared local theme script');
- assert.ok(html.includes('<script src="theme-v09.js"></script>')&&!/<iframe\b/.test(html),'Only the approved local theme script; no iframe');
- assert.ok(existsSync(fileURLToPath(new URL('../public/theme-v09.js',import.meta.url))));
- assert.ok(html.includes('id="themeToggle"')&&html.includes('id="themeLabel"'),'Theme switch on '+file);
+ assert.ok(html.includes('<script src="theme-v10.js"></script>')&&!/<iframe\b/.test(html),'Only the approved local theme script; no iframe');
+ assert.ok(existsSync(fileURLToPath(new URL('../public/theme-v10.js',import.meta.url))));
+ assert.ok(html.includes('id="themeToggle"')&&!html.includes('id="themeLabel"'),'Theme switch on '+file);
 }
 const home=load('index.html');
 const manifest=JSON.parse(readFileSync(new URL('./photo-manifest.json',import.meta.url),'utf8'));
@@ -54,9 +54,9 @@ console.log('PASS: local anchors, page headings, all six lab links, two entry pa
 
 assert.equal((home.match(/class="press-card"/g)||[]).length,2,'Independent press links');
 assert.ok(home.includes('https://www.sootoday.com/local-news/the-problem-with-our-new-skate-park-25-photos-124248')&&home.includes('https://www.sootoday.com/local-news/the-skate-park-isnt-big-enough-for-the-community-that-we-have-11-photos-322287'),'Both supplied articles linked');
-assert.ok(home.includes('$75,000')&&home.includes('do not verify the full funding total'),'Grant and funding provenance');
+assert.ok(home.includes('$75,000')&&home.includes('Independently reported contribution'),'Grant and funding provenance');
 assert.ok(home.includes('id="impact-title"')&&home.includes('id="impact-skatepark"'),'Career impact case');
-assert.match(load('styles-v09.css'),/\.portrait-image img\{object-fit:contain/);
+assert.match(load('styles-v10.css'),/\.portrait-image img\{object-fit:contain/);
 
 const evidence=load('evidence.html');
 assert.ok(home.includes('href="evidence.html#recognition"')&&home.includes('href="evidence.html"'),'Evidence library entry points');
@@ -75,12 +75,21 @@ for(const [path,sha,size] of visualAssets){
  assert.equal(createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex'),sha,'Asset integrity: '+path);
  assert.ok(home.includes('src="'+path+'"'),'Image included: '+path);
 }
-for(const p of ['index.html','evidence.html','briefing.html'])assert.ok(load(p).includes('href="styles-v09.css"'),'Versioned stylesheet '+p);
+for(const p of ['index.html','evidence.html','briefing.html'])assert.ok(load(p).includes('href="styles-v10.css"'),'Versioned stylesheet '+p);
 assert.equal((home.match(/class="impact-achievement"/g)||[]).length,4);
 assert.equal((home.match(/class="impact-project-image"/g)||[]).length,3);
-assert.ok(load('styles-v09.css').includes('#impact .impact-grid{display:grid'));
+assert.ok(load('styles-v10.css').includes('#impact .impact-grid{display:grid'));
 console.log('PASS: versioned stylesheet, provenance, image integrity and career impact card structure.');
 
 assert.ok(home.includes('class="portrait-stage"'),'Approved portrait glow wrapper');
-assert.match(load('styles-v09.css'),/border-radius:22px/);
-assert.ok(load('theme-v09.js').includes('tm-insights-theme'),'Persistent theme setting');
+assert.match(load('styles-v10.css'),/border-radius:22px/);
+assert.ok(load('theme-v10.js').includes('tm-insights-theme'),'Persistent theme setting');
+
+assert.ok(!home.includes('Local reporting identifies me as association president in both 2009 and 2016.'));
+assert.ok(home.includes('As President of the Superior Community Skatepark Association, I worked'));
+assert.ok(!home.includes('<strong>Evidence boundaries</strong>')&&!home.includes('class="impact-evidence-note"'),'Removed standalone evidence boundaries panel');
+assert.ok(!load('briefing.html').includes('See the case and evidence boundaries.'));
+for(const file of ['index.html','evidence.html']){
+ const html=load(file);
+ assert.ok(html.includes('class="button small mast-brief">Executive Brief'),'Prominent executive brief link');
+}
