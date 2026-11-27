@@ -10,6 +10,11 @@ try{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);
   assert.equal(await page.locator('h1').count(),1);
+  const portrait=page.locator('.portrait-image img');
+  await portrait.waitFor({state:'visible'});
+  await portrait.evaluate(img=>img.decode());
+  assert.deepEqual(await portrait.evaluate(img=>[img.naturalWidth,img.naturalHeight]),[400,500],'Portrait decoded correctly');
+  assert.equal(await page.locator('.philosophy-principles article').count(),3);
   assert.equal(await page.locator('.case-card').count(),6);
   assert.equal(await page.locator('.fit-item').count(),6);
   assert.equal(await page.locator('.reviewer-paths>a').count(),3);

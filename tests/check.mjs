@@ -19,7 +19,12 @@ for (const file of ['index.html','briefing.html']) {
  assert.ok(!/<script\b|<iframe\b/.test(html),'No external or inline scripts or embeds');
 }
 const home=load('index.html');
-for(const id of ['leadership','experience','strategy','work','research-note','alignment','roadmap'])assert.ok(home.includes('id="'+id+'"'));
+assert.match(home,/<img src="assets\/travis-portrait.avif" width="400" height="500" alt="[^"]+"/);
+const portrait=readFileSync(new URL('../public/assets/travis-portrait.avif',import.meta.url));
+assert.equal(portrait.length,4400,'Portrait file byte length');
+assert.equal(portrait.toString('ascii',4,12),'ftypavif','AVIF file signature');
+assert.equal(portrait.reduce((v,b)=>Math.imul(v^b,16777619)>>>0,2166136261),0x044e9420,'Original crop transfer checksum');
+for(const id of ['philosophy','leadership','experience','strategy','work','research-note','alignment','roadmap'])assert.ok(home.includes('id="'+id+'"'));
 for(let i=1;i<=6;i++)assert.ok(home.includes('https://searchmont-analytics.github.io/customer-intelligence-lab/#module-'+i));
 assert.ok(home.includes('#executive-1')&&home.includes('#technical'));
 assert.ok(home.includes('2007–2009</time><div><h3>Voice Network Analyst')&&home.includes('2009–2011*</time>'));
