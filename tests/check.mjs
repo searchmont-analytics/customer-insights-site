@@ -17,7 +17,10 @@ for (const file of ['index.html','briefing.html','evidence.html']) {
    if(href.includes('#'))assert.ok(load(path==='./'?'index.html':path).includes('id="'+href.split('#')[1]+'"'),'Missing cross-page anchor');
   }
  }
- assert.ok(!/<script\b|<iframe\b/.test(html),'No external or inline scripts or embeds');
+ assert.equal((html.match(/<script\b[^>]*>[\s\S]*?<\/script>/g)||[]).length,1,'One shared local theme script');
+ assert.ok(html.includes('<script src="theme-v09.js"></script>')&&!/<iframe\b/.test(html),'Only the approved local theme script; no iframe');
+ assert.ok(existsSync(fileURLToPath(new URL('../public/theme-v09.js',import.meta.url))));
+ assert.ok(html.includes('id="themeToggle"')&&html.includes('id="themeLabel"'),'Theme switch on '+file);
 }
 const home=load('index.html');
 const manifest=JSON.parse(readFileSync(new URL('./photo-manifest.json',import.meta.url),'utf8'));
@@ -29,8 +32,8 @@ for(const p of manifest.photos){
  assert.ok(home.includes('src="'+p.path+'"'),'Photo referenced: '+p.path);
  if(p.path.endsWith('.webp'))assert.equal(bytes.toString('ascii',8,12),'WEBP');
  else assert.equal(bytes.toString('ascii',4,12),'ftypavif');
- if(version.quality==='legacy')console.warn('PENDING high-resolution replacement: '+p.path);
- else {assert.ok(Math.max(version.width,version.height)>=1200);console.log('HQ: '+p.path+' '+version.width+'x'+version.height);}
+ assert.equal(version.quality,'high','High quality required: '+p.path);
+ assert.ok(Math.max(version.width,version.height)>=1200);console.log('HQ: '+p.path+' '+version.width+'x'+version.height);
 }
 assert.equal((home.match(/class="leadership-figure"/g)||[]).length,3);
 assert.equal((home.match(/AI-generated illustration/g)||[]).length,1);
@@ -53,7 +56,7 @@ assert.equal((home.match(/class="press-card"/g)||[]).length,2,'Independent press
 assert.ok(home.includes('https://www.sootoday.com/local-news/the-problem-with-our-new-skate-park-25-photos-124248')&&home.includes('https://www.sootoday.com/local-news/the-skate-park-isnt-big-enough-for-the-community-that-we-have-11-photos-322287'),'Both supplied articles linked');
 assert.ok(home.includes('$75,000')&&home.includes('do not verify the full funding total'),'Grant and funding provenance');
 assert.ok(home.includes('id="impact-title"')&&home.includes('id="impact-skatepark"'),'Career impact case');
-assert.match(load('styles-v07.css'),/\.portrait-image img\{object-fit:contain/);
+assert.match(load('styles-v09.css'),/\.portrait-image img\{object-fit:contain/);
 
 const evidence=load('evidence.html');
 assert.ok(home.includes('href="evidence.html#recognition"')&&home.includes('href="evidence.html"'),'Evidence library entry points');
@@ -72,8 +75,12 @@ for(const [path,sha,size] of visualAssets){
  assert.equal(createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex'),sha,'Asset integrity: '+path);
  assert.ok(home.includes('src="'+path+'"'),'Image included: '+path);
 }
-for(const p of ['index.html','evidence.html','briefing.html'])assert.ok(load(p).includes('href="styles-v07.css"'),'Versioned stylesheet '+p);
+for(const p of ['index.html','evidence.html','briefing.html'])assert.ok(load(p).includes('href="styles-v09.css"'),'Versioned stylesheet '+p);
 assert.equal((home.match(/class="impact-achievement"/g)||[]).length,4);
 assert.equal((home.match(/class="impact-project-image"/g)||[]).length,3);
-assert.ok(load('styles-v07.css').includes('#impact .impact-grid{display:grid'));
+assert.ok(load('styles-v09.css').includes('#impact .impact-grid{display:grid'));
 console.log('PASS: versioned stylesheet, provenance, image integrity and career impact card structure.');
+
+assert.ok(home.includes('class="portrait-stage"'),'Approved portrait glow wrapper');
+assert.match(load('styles-v09.css'),/border-radius:22px/);
+assert.ok(load('theme-v09.js').includes('tm-insights-theme'),'Persistent theme setting');

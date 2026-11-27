@@ -1,9 +1,25 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { fileURLToPath } from 'node:url';
+import { resolve, sep, extname } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-const url=new URL('../public/index.html',import.meta.url).href;
+const publicDir=fileURLToPath(new URL('../public/',import.meta.url));
+const baseDir=resolve(publicDir);
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.webp':'image/webp','.avif':'image/avif','.png':'image/png','.jpg':'image/jpeg'};
+const server=createServer((req,res)=>{
+ try{
+   const pathname=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
+   const file=resolve(baseDir,'.'+(pathname==='/'?'/index.html':pathname));
+   if(!file.startsWith(baseDir+sep))throw Error('Outside public directory');
+   const bytes=readFileSync(file);
+   res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream'});res.end(bytes);
+ }catch(e){res.writeHead(404);res.end('Not found')}
+});
+await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve)});
+const url='http://127.0.0.1:'+server.address().port+'/index.html';
 const manifest=JSON.parse(readFileSync(new URL('./photo-manifest.json',import.meta.url),'utf8'));
 const photoDimensions=new Map(manifest.photos.map(p=>{
  const bytes=readFileSync(new URL('../public/'+p.path,import.meta.url));
@@ -16,11 +32,32 @@ const photoDimensions=new Map(manifest.photos.map(p=>{
 await mkdir(new URL('./output/',import.meta.url),{recursive:true});
 const browser=await chromium.launch({headless:true});
 try{
- for(const width of [1440,768,390,320]){
-  const page=await browser.newPage({viewport:{width,height:900},reducedMotion:'reduce'});
+ for(const theme of ['light','dark'])for(const width of [1440,768,390,320]){
+  const page=await browser.newPage({viewport:{width,height:900},reducedMotion:'reduce',colorScheme:theme});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);
   assert.equal(await page.locator('h1').count(),1);
+  const getTheme=()=>page.locator('html').getAttribute('data-theme');
+  const toggle=page.locator('#themeToggle');
+  await toggle.waitFor({state:'visible'});
+  assert.equal(await getTheme(),theme,'System theme on first visit');
+  const before=await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor);
+  await toggle.focus();await page.keyboard.press('Enter');
+  const other=theme==='light'?'dark':'light';
+  assert.equal(await getTheme(),other,'Keyboard theme switch');
+  assert.notEqual(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),before,'Canvas changes');
+  await page.reload();await toggle.waitFor({state:'visible'});
+  assert.equal(await getTheme(),other,'Theme persists after reload');
+  await toggle.click();assert.equal(await getTheme(),theme,'Return to scenario theme');
+  assert.equal(await toggle.getAttribute('aria-label'),theme==='dark'?'Switch to light mode':'Switch to dark mode');
+  const card=page.locator('.hero-portrait');
+  assert.equal(await card.evaluate(el=>getComputedStyle(el).borderTopLeftRadius),'22px','Approved rounded corners');
+  assert.equal(await card.evaluate(el=>getComputedStyle(el).overflow),'hidden','Rounded clipping');
+  assert.ok(await card.evaluate(el=>getComputedStyle(el).boxShadow.includes('rgba')),'Portrait lighting shadow');
+  assert.equal(await page.locator('.portrait-stage').evaluate(el=>getComputedStyle(el,'::before').backgroundImage.includes('radial-gradient')),true,'Underglow');
+  const sample=await page.locator('.case-card').first().evaluate(el=>({bg:getComputedStyle(el).backgroundColor,fg:getComputedStyle(el).color}));
+  assert.equal(sample.bg,theme==='dark'?'rgb(20, 37, 49)':'rgb(255, 255, 255)','Themed leadership cards');
+  assert.equal(sample.fg,theme==='dark'?'rgb(235, 242, 243)':'rgb(20, 44, 58)','Themed card text');
   const portrait=page.locator('.portrait-image img');
   await portrait.waitFor({state:'visible'});
   await portrait.evaluate(img=>img.decode());
@@ -35,7 +72,7 @@ try{
   const layout=await page.evaluate(()=>{
     const d=s=>getComputedStyle(document.querySelector(s));
     const rect=s=>Array.from(document.querySelectorAll(s),n=>({x:n.getBoundingClientRect().x,y:n.getBoundingClientRect().y}));
-    return {stylesheet:[...document.styleSheets].some(s=>s.href&&s.href.endsWith('/styles-v07.css')),head:d('#impact .impact-feature-head').display,background:d('#impact .impact-feature-head').backgroundImage,foreground:d('#impact .impact-feature-head').color,journey:d('#impact .impact-journey').display,press:d('#impact .press-grid').display,pressCard:d('#impact .press-card').display,recognition:d('#impact .impact-recognition').display,cards:d('#impact .impact-grid').display,card:d('#impact .impact-achievement').display,columns:rect('#impact .impact-achievement'),milestones:rect('#impact .impact-journey article'),bodyPadding:parseFloat(d('#impact .impact-feature-body').paddingTop),metric:d('#impact .impact-feature-metric strong').display};
+    return {stylesheet:[...document.styleSheets].some(s=>s.href&&s.href.endsWith('/styles-v09.css')),head:d('#impact .impact-feature-head').display,background:d('#impact .impact-feature-head').backgroundImage,foreground:d('#impact .impact-feature-head').color,journey:d('#impact .impact-journey').display,press:d('#impact .press-grid').display,pressCard:d('#impact .press-card').display,recognition:d('#impact .impact-recognition').display,cards:d('#impact .impact-grid').display,card:d('#impact .impact-achievement').display,columns:rect('#impact .impact-achievement'),milestones:rect('#impact .impact-journey article'),bodyPadding:parseFloat(d('#impact .impact-feature-body').paddingTop),metric:d('#impact .impact-feature-metric strong').display};
   });
   assert.ok(layout.stylesheet,'Versioned stylesheet loaded');
   for(const name of ['head','journey','press','recognition','cards'])assert.equal(layout[name],'grid','Computed layout: '+name);
@@ -59,7 +96,7 @@ try{
    assert.ok(await visual.evaluate(el=>el.naturalWidth>0&&el.naturalHeight>0),'Project image decoded');
   }
   await page.locator('#impact').scrollIntoViewIfNeeded();
-  await page.screenshot({path:new URL('./output/impact-'+width+'.png',import.meta.url).pathname});
+  await page.screenshot({path:new URL('./output/impact-'+theme+'-'+width+'.png',import.meta.url).pathname});
   await page.goto(url);
   assert.equal(await page.locator('.case-card').count(),6);
   const leadershipImages=page.locator('.leadership-image img');
@@ -89,17 +126,29 @@ try{
   assert.ok(page.url().endsWith('#work'));
   assert.ok(await page.locator('a[href="https://searchmont-analytics.github.io/customer-intelligence-lab/#executive-1"]').count()>0);
   await page.goto(url);
-  await page.screenshot({path:new URL('./output/home-'+width+'.png',import.meta.url).pathname,fullPage:true});
-  await page.goto(new URL('../public/briefing.html',import.meta.url).href);
+  await page.screenshot({path:new URL('./output/home-'+theme+'-'+width+'.png',import.meta.url).pathname,fullPage:true});
+  await page.goto(new URL('briefing.html',url).href);
+  await page.locator('#themeToggle').waitFor({state:'visible'});
+  assert.equal(await getTheme(),theme,'Preference on executive briefing');
+  assert.equal(await page.locator('.brief').evaluate(el=>getComputedStyle(el).backgroundColor),theme==='dark'?'rgb(20, 37, 49)':'rgb(255, 255, 255)','Briefing theme');
   const b=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,inner:innerWidth}));
   assert.ok(b.scroll<=b.inner+2,'Briefing overflow '+width);
   assert.deepEqual(errors,[]);
-  if(width===1440){await page.pdf({path:new URL('./output/briefing.pdf',import.meta.url).pathname,format:'Letter',printBackground:true});}
+  if(width===1440){
+   await page.emulateMedia({media:'print'});
+   assert.equal(await page.locator('.brief').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 255)','White printable briefing in either theme');
+   assert.equal(await page.locator('.brief').evaluate(el=>getComputedStyle(el).color),'rgb(17, 17, 17)','Dark print text');
+   if(theme==='dark')await page.pdf({path:new URL('./output/briefing.pdf',import.meta.url).pathname,format:'Letter',printBackground:true});
+   await page.emulateMedia({media:'screen'});
+  }
   await page.goto(url);
   await page.locator('nav a[href="evidence.html"]').click();
   assert.ok(page.url().endsWith('/evidence.html'));
   assert.equal(await page.locator('h1').count(),1);
   assert.equal(await page.locator('.recognition-feature').count(),1);
+  await page.locator('#themeToggle').waitFor({state:'visible'});
+  assert.equal(await getTheme(),theme,'Preference on evidence library');
+  assert.equal(await page.locator('.recognition-feature').evaluate(el=>getComputedStyle(el).backgroundColor),theme==='dark'?'rgb(20, 37, 49)':'rgb(255, 255, 255)','Evidence library theme');
   assert.equal(await page.locator('.recognition-grid').evaluate(el=>getComputedStyle(el).display),'grid','Evidence recognition CSS loaded');
   assert.equal(await page.locator('#press .press-card').count(),2);
   assert.equal(await page.locator('.library-card-grid article').count(),6);
@@ -108,8 +157,18 @@ try{
   await page.locator('nav a[href="#recognition"]').click();
   assert.ok(page.url().endsWith('#recognition'));
   assert.deepEqual(errors,[]);
-  await page.screenshot({path:new URL('./output/evidence-'+width+'.png',import.meta.url).pathname,fullPage:true});
+  await page.screenshot({path:new URL('./output/evidence-'+theme+'-'+width+'.png',import.meta.url).pathname,fullPage:true});
   await page.close();
-  console.log('PASS '+width+'px homepage, navigation, disclosure controls, briefing, evidence library and layout');
+  console.log('PASS '+theme+' '+width+'px homepage, navigation, disclosure controls, briefing, evidence library and layout');
  }
-}finally{await browser.close()}
+ const hover=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'dark',reducedMotion:'no-preference'});
+ await hover.goto(url);
+ const portrait=hover.locator('.hero-portrait');
+ await portrait.hover();
+ await hover.waitForFunction(()=>getComputedStyle(document.querySelector('.hero-portrait')).transform!=='none');
+ await hover.screenshot({path:new URL('./output/hero-hover.png',import.meta.url).pathname});
+ await hover.emulateMedia({reducedMotion:'reduce'});
+ assert.equal(await portrait.evaluate(el=>getComputedStyle(el).transform),'none','Reduced motion disables portrait lift');
+ await hover.close();
+ console.log('PASS: desktop hover and reduced motion');
+}finally{await browser.close();await new Promise(resolve=>server.close(resolve))}

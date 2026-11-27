@@ -33,13 +33,6 @@
           "width": 1417,
           "height": 945,
           "quality": "high"
-        },
-        {
-          "sha": "c21e8ff7b5cccb9192a4339092bda20f4d4546a7",
-          "size": 4403,
-          "width": 420,
-          "height": 280,
-          "quality": "legacy"
         }
       ]
     },
@@ -52,13 +45,6 @@
           "width": 1260,
           "height": 945,
           "quality": "high"
-        },
-        {
-          "sha": "25c8680df6cbe5acbf968006d2dbfea0cf7f876c",
-          "size": 3740,
-          "width": 400,
-          "height": 300,
-          "quality": "legacy"
         }
       ]
     }
