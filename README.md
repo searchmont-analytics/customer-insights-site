@@ -1,8 +1,8 @@
 # Travis McCormack — Customer Research & Insights Leadership
-Initial release of a dedicated executive portfolio for travis-mccormack-insights.com. The separate Customer Intelligence Lab remains at https://searchmont-analytics.github.io/customer-intelligence-lab/. This site links to its executive guided tour, technical pathway and each module; it does not copy the research application or modify the lab repository.
+Release 0.2 of a dedicated executive portfolio for travis-mccormack-insights.com. The separate Customer Intelligence Lab remains at https://searchmont-analytics.github.io/customer-intelligence-lab/. This site links to its executive guided tour, technical pathway and each module; it does not copy the research application or modify the lab repository.
 
 ## Structure
-- `public/index.html`: executive introduction, leadership examples, enterprise experience, research vision, flagship lab, third-party appraisal, role-alignment accordions, 90-day roadmap.
+- `public/index.html`: executive introduction, six leadership examples (including community investment and enterprise change), three hiring-panel entry paths, enterprise experience, research vision, flagship lab, third-party appraisal, role-alignment accordions, 90-day roadmap.
 - `public/briefing.html`: concise, print-styled executive briefing (browser Print → Save as PDF).
 - `public/styles.css`: responsive editorial design, native HTML controls, accessible focus, print and reduced-motion styles.
 - `public/favicon.svg`: original typographic mark. No external assets, scripts, tracking or dependencies.
@@ -25,7 +25,7 @@ Cloudflare project setup, DNS and TLS were not performed by the GitHub integrati
 
 ## Content and governance
 Career evidence is based on the author's public portfolios, plus confirmed Voice Network Analyst dates (2007–2009). QA dates (2009–2011) are inferred and labelled. Sources: https://data-analytics-travis-mccormack.com/ and https://travis-mccormack-analytics.com/. Third-party appraisal cites Statistics Canada, Rotermann and Gilmour, August 9, 2022, based on 2018 data. The appraisal is not a current market estimate. The lab's fixed baseline scenario is synthetic or illustrative; no real customer records, private CV or employer-owned source code are included.
-Before publishing, confirm career statements and preferred language. The site intentionally avoids claiming prior professional customer research management, corporate people-management or procurement qualifications that have not been established. No video placeholder: integrate the approved film only after production in the lab's separate video workstream. An approved local portrait and additional detailed leadership stories are optional future enhancements. Keep the new site focused on research leadership; the existing portfolio domains remain intact.
+Before publishing, confirm career statements and preferred language. The site intentionally avoids claiming prior professional customer research management, corporate people-management or procurement qualifications that have not been established. No video placeholder: integrate the approved film only after production in the lab's separate video workstream. Additional career details and an approved local portrait are optional future enhancements. No external image is hotlinked; the existing portfolio portrait was not retrievable for verification. The six leadership examples, enterprise deliverable counts and the methodological review are based on the public career summaries and linked Statistics Canada study; they are not independent verification of employment claims. Keep the new site focused on research leadership; the existing portfolio domains remain intact.
 
 ## Test
 `node tests/check.mjs`

@@ -24,5 +24,9 @@ for(let i=1;i<=6;i++)assert.ok(home.includes('https://searchmont-analytics.githu
 assert.ok(home.includes('#executive-1')&&home.includes('#technical'));
 assert.ok(home.includes('2007–2009</time><div><h3>Voice Network Analyst')&&home.includes('2009–2011*</time>'));
 assert.equal((home.match(/class="fit-item"/g)||[]).length,6);
+assert.equal((home.match(/class="case-card"/g)||[]).length,6,'Six evidence-based leadership examples');
+assert.ok(home.includes('id="reviewer-title"')&&home.includes('class="reviewer-paths"'),'Hiring-panel pathways');
+assert.ok(home.includes('$400,000 raised')&&home.includes('14 sections')&&home.includes('17 lessons'),'Documented evidence highlights');
+assert.ok(home.includes('class="research-method-note"'),'Research appraisal methods disclosure');
 assert.match(home,/not an OLG customer sample/i);
 console.log('PASS: local anchors, page headings, all six lab links, two entry pathways, timeline, alignment and source safeguards.');

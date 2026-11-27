@@ -10,8 +10,12 @@ try{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);
   assert.equal(await page.locator('h1').count(),1);
-  assert.equal(await page.locator('.case-card').count(),4);
+  assert.equal(await page.locator('.case-card').count(),6);
   assert.equal(await page.locator('.fit-item').count(),6);
+  assert.equal(await page.locator('.reviewer-paths>a').count(),3);
+  await page.locator('.research-method-note summary').click();
+  assert.equal(await page.locator('.research-method-note').getAttribute('open'),'');
+  await page.locator('.research-method-note summary').click();
   const bounds=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,inner:innerWidth}));
   assert.ok(bounds.scroll<=bounds.inner+2,'Horizontal page overflow '+width+' '+JSON.stringify(bounds));
   await page.locator('.fit-item').nth(2).locator('summary').click();
