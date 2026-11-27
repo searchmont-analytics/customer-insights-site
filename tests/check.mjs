@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const load=p=>readFileSync(new URL('../public/'+p,import.meta.url),'utf8');
-for (const file of ['index.html','briefing.html']) {
+for (const file of ['index.html','briefing.html','evidence.html']) {
  const html=load(file);
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(new Set(ids).size,ids.length,'Unique ids '+file);
@@ -53,3 +53,13 @@ assert.ok(home.includes('https://www.sootoday.com/local-news/the-problem-with-ou
 assert.ok(home.includes('$75,000')&&home.includes('do not verify the full funding total'),'Grant and funding provenance');
 assert.ok(home.includes('id="impact-title"')&&home.includes('id="impact-skatepark"'),'Career impact case');
 assert.match(load('styles.css'),/\.portrait-image img\{object-fit:contain/);
+
+const evidence=load('evidence.html');
+assert.ok(home.includes('href="evidence.html#recognition"')&&home.includes('href="evidence.html"'),'Evidence library entry points');
+for(const id of ['recognition','press','career','projects'])assert.ok(evidence.includes('id="'+id+'"'));
+assert.ok(evidence.includes('not a formal personal award')&&evidence.includes('original email is retained privately'),'Recognition scope');
+assert.ok(evidence.includes('https://travis-mccormack-emergency-service.com/')&&home.includes('https://travis-mccormack-emergency-service.com/'),'Emergency service portfolio links');
+for(const content of [home,evidence,load('briefing.html')]){
+ assert.ok(!/mailto:|\.pdf["']|[A-Za-z0-9._%+-]+@(?:opp\.ca|ontario\.ca|gmail\.com)/i.test(content),'No private correspondence attachment or email address');
+}
+console.log('PASS: evidence library routes, source categories and privacy safeguards.');

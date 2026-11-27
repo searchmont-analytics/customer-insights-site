@@ -1,24 +1,23 @@
 name: Publish portfolio to GitHub Pages
 # GitHub Actions publishing source and custom-domain DNS confirmed by site owner.
-# Publish only public/ after static checks; manual dispatch remains available.
+# Separate upload from deployment to reduce artifact metadata propagation races.
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['public/**', '.github/workflows/publish-pages.yml']
+    paths: ['public/**', '.github/workflows/publish-pages.yml', 'tests/check.mjs']
 permissions:
   contents: read
-  pages: write
-  id-token: write
 concurrency:
   group: portfolio-pages
   cancel-in-progress: false
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pages: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,6 +28,38 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
+          retention-days: 2
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Verify Pages artifact is available
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          for attempt in {1..12}; do
+            if count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" --jq '[.artifacts[] | select(.name == "github-pages" and .expired == false)] | length'); then
+              echo "Artifact lookup $attempt: $count available"
+              if [ "$count" = "1" ]; then exit 0; fi
+              if [ "$count" -gt 1 ]; then
+                echo "::error::Duplicate Pages artifacts. Dispatch a fresh workflow run."
+                exit 1
+              fi
+            fi
+            sleep 5
+          done
+          echo "::error::Pages artifact was not visible after retries. Dispatch a fresh workflow run."
+          exit 1
       - name: Deploy portfolio
         id: deployment
         uses: actions/deploy-pages@v4

@@ -55,7 +55,20 @@ try{
   assert.ok(b.scroll<=b.inner+2,'Briefing overflow '+width);
   assert.deepEqual(errors,[]);
   if(width===1440){await page.pdf({path:new URL('./output/briefing.pdf',import.meta.url).pathname,format:'Letter',printBackground:true});}
+  await page.goto(url);
+  await page.locator('nav a[href="evidence.html"]').click();
+  assert.ok(page.url().endsWith('/evidence.html'));
+  assert.equal(await page.locator('h1').count(),1);
+  assert.equal(await page.locator('.recognition-feature').count(),1);
+  assert.equal(await page.locator('#press .press-card').count(),2);
+  assert.equal(await page.locator('.library-card-grid article').count(),6);
+  const ev=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,inner:innerWidth}));
+  assert.ok(ev.scroll<=ev.inner+2,'Evidence library overflow '+width+' '+JSON.stringify(ev));
+  await page.locator('nav a[href="#recognition"]').click();
+  assert.ok(page.url().endsWith('#recognition'));
+  assert.deepEqual(errors,[]);
+  await page.screenshot({path:new URL('./output/evidence-'+width+'.png',import.meta.url).pathname,fullPage:true});
   await page.close();
-  console.log('PASS '+width+'px homepage, navigation, disclosure controls, briefing and layout');
+  console.log('PASS '+width+'px homepage, navigation, disclosure controls, briefing, evidence library and layout');
  }
 }finally{await browser.close()}
