@@ -19,6 +19,18 @@ for (const file of ['index.html','briefing.html']) {
  assert.ok(!/<script\b|<iframe\b/.test(html),'No external or inline scripts or embeds');
 }
 const home=load('index.html');
+const leadershipImages=[['board',3756,0x81ac9887],['community',4560,0x4631ef5f],['chief',4164,0xa50fd74d]];
+for(const [name,bytes,checksum] of leadershipImages){
+ const path='assets/lead-'+name+'.avif';
+ const img=readFileSync(new URL('../public/'+path,import.meta.url));
+ assert.equal(img.length,bytes,'Image byte length: '+name);
+ assert.equal(img.toString('ascii',4,12),'ftypavif');
+ assert.equal(img.reduce((v,b)=>Math.imul(v^b,16777619)>>>0,2166136261),checksum,'Image transfer checksum: '+name);
+ assert.ok(home.includes('src="'+path+'"'),'Leadership image referenced');
+}
+assert.equal((home.match(/class="leadership-figure"/g)||[]).length,3);
+assert.equal((home.match(/AI-generated illustration/g)||[]).length,2);
+assert.ok(home.includes('not documentary evidence of a particular meeting'));
 assert.match(home,/<img src="assets\/travis-portrait.avif" width="400" height="500" alt="[^"]+"/);
 const portrait=readFileSync(new URL('../public/assets/travis-portrait.avif',import.meta.url));
 assert.equal(portrait.length,4400,'Portrait file byte length');

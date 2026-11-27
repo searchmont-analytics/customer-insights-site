@@ -29,3 +29,22 @@
 @media(max-width:760px){.hero-grid{grid-template-columns:1fr;gap:24px}.hero-portrait{justify-self:center;max-width:300px}.hero-portrait figcaption strong{font-size:15px}.philosophy{grid-template-columns:1fr;gap:23px}.philosophy-statement h2 br{display:none}.philosophy-foot{display:grid;gap:9px}.philosophy-foot>span{margin-right:0}}
 @media(max-width:380px){.hero-portrait{max-width:265px}.portrait-accent{width:18px}}
 @media print{.hero-portrait{display:none}.philosophy-section{background:white;color:var(--ink);padding:14px 0}.philosophy{grid-template-columns:1fr;gap:12px}.philosophy-statement h2,.philosophy-statement p,.philosophy-principles p,.philosophy-foot,.philosophy-foot a{color:var(--ink)!important}.philosophy-statement h2 br{display:none}.philosophy-principles article{border-color:var(--line);break-inside:avoid}}
+
+/* Release 0.4 · leadership visual storytelling */
+.leadership-visuals{margin:0 0 27px}
+.leadership-visual-heading{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:end;gap:20px;margin-bottom:15px}
+.leadership-visual-heading h3{font-family:var(--serif);font-weight:400;font-size:clamp(24px,3vw,33px);letter-spacing:-.035em;line-height:1.15;margin-top:7px}
+.leadership-visual-heading>p{font-size:13px;line-height:1.6;color:var(--muted)}
+.leadership-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.leadership-figure{margin:0;background:#fff;border:1px solid var(--line);min-width:0}
+.leadership-image{overflow:hidden;aspect-ratio:4/3;background:#dfe6e2}
+.leadership-image img{width:100%;height:100%;object-fit:cover;display:block;object-position:50% 34%}
+.leadership-image-board img{object-position:center}
+.leadership-image-community img{object-position:50% 18%}
+.leadership-image-chief img{object-position:50% 28%}
+.leadership-figure figcaption{padding:15px 17px 18px}
+.image-provenance{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:650;line-height:1.4;margin-bottom:6px}
+.leadership-figure h4{font-size:16px;letter-spacing:-.02em;color:var(--ink);line-height:1.3;margin:4px 0 7px}
+.leadership-figure p{font-size:13px;line-height:1.6;color:var(--muted)}
+@media(max-width:760px){.leadership-visual-heading{grid-template-columns:1fr;gap:9px}.leadership-gallery{grid-template-columns:1fr;gap:12px}.leadership-image{aspect-ratio:4/3;max-height:250px}.leadership-figure figcaption{padding:14px 16px}.leadership-image-community img,.leadership-image-chief img{object-position:50% 23%}}
+@media print{.leadership-gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.leadership-figure{break-inside:avoid}.leadership-image{max-height:110px}.leadership-figure figcaption{padding:8px}.leadership-figure p{font-size:10px}}

@@ -16,6 +16,16 @@ try{
   assert.deepEqual(await portrait.evaluate(img=>[img.naturalWidth,img.naturalHeight]),[400,500],'Portrait decoded correctly');
   assert.equal(await page.locator('.philosophy-principles article').count(),3);
   assert.equal(await page.locator('.case-card').count(),6);
+  const leadershipImages=page.locator('.leadership-image img');
+  assert.equal(await leadershipImages.count(),3);
+  const expected=[[340,255],[302,340],[255,340]];
+  for(let k=0;k<3;k++){
+   const img=leadershipImages.nth(k);
+   await img.scrollIntoViewIfNeeded();
+   await img.evaluate(el=>el.decode());
+   assert.deepEqual(await img.evaluate(el=>[el.naturalWidth,el.naturalHeight]),expected[k],'Leadership image decoded');
+  }
+  await page.locator('h1').scrollIntoViewIfNeeded();
   assert.equal(await page.locator('.fit-item').count(),6);
   assert.equal(await page.locator('.reviewer-paths>a').count(),3);
   await page.locator('.research-method-note summary').click();
